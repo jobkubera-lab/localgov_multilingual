@@ -1,0 +1,4 @@
+services:
+  localgov_multilingual.available_translations_resolver:
+    class: Drupal\localgov_multilingual\AvailableTranslationsResolver
+    arguments: ['@language_manager']
