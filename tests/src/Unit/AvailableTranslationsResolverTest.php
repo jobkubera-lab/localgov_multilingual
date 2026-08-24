@@ -30,7 +30,10 @@ final class AvailableTranslationsResolverTest extends UnitTestCase {
 
     $entity = $this->createMock(ContentEntityInterface::class);
     $entity->method('language')->willReturn($english);
-    $entity->method('hasTranslation')->with('cy')->willReturn(FALSE);
+    $entity->expects($this->once())
+      ->method('hasTranslation')
+      ->with('cy')
+      ->willReturn(FALSE);
 
     $resolver = new AvailableTranslationsResolver($language_manager);
 
@@ -52,7 +55,10 @@ final class AvailableTranslationsResolverTest extends UnitTestCase {
 
     $entity = $this->createMock(ContentEntityInterface::class);
     $entity->method('language')->willReturn($english);
-    $entity->method('hasTranslation')->with('cy')->willReturn(TRUE);
+    $entity->expects($this->once())
+      ->method('hasTranslation')
+      ->with('cy')
+      ->willReturn(TRUE);
 
     $resolver = new AvailableTranslationsResolver($language_manager);
 
