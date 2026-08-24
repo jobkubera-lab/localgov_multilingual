@@ -1,91 +1,71 @@
 <?php
 
-namespace Drupal\Tests\localgov_multilingual\Kernel;
+namespace Drupal\Tests\localgov_multilingual\Unit;
 
-use Drupal\KernelTests\KernelTestBase;
-use Drupal\node\Entity\Node;
-use Drupal\node\Entity\NodeType;
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\localgov_multilingual\AvailableTranslationsResolver;
+use Drupal\Tests\UnitTestCase;
 
 /**
  * Tests the available translations resolver.
  *
  * @group localgov_multilingual
  */
-final class AvailableTranslationsResolverTest extends KernelTestBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static $modules = [
-    'system',
-    'user',
-    'field',
-    'text',
-    'node',
-    'language',
-    'content_translation',
-    'localgov_multilingual',
-  ];
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    $this->installEntitySchema('user');
-    $this->installEntitySchema('node');
-    $this->installSchema('node', ['node_access']);
-    $this->installConfig(['language', 'content_translation']);
-
-    NodeType::create([
-      'type' => 'page',
-      'name' => 'Page',
-    ])->save();
-  }
+final class AvailableTranslationsResolverTest extends UnitTestCase {
 
   /**
    * English-only content exposes only its source language.
    */
   public function testSourceLanguageOnly(): void {
-    $node = Node::create([
-      'type' => 'page',
-      'title' => 'Council tax support',
-      'langcode' => 'en',
+    $english = $this->createLanguage('en');
+    $welsh = $this->createLanguage('cy');
+
+    $language_manager = $this->createMock(LanguageManagerInterface::class);
+    $language_manager->method('getLanguages')->willReturn([
+      'en' => $english,
+      'cy' => $welsh,
     ]);
-    $node->save();
 
-    $languages = $this->container
-      ->get('localgov_multilingual.available_translations_resolver')
-      ->resolve($node);
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $entity->method('language')->willReturn($english);
+    $entity->method('hasTranslation')->with('cy')->willReturn(FALSE);
 
-    $this->assertSame(['en'], array_keys($languages));
+    $resolver = new AvailableTranslationsResolver($language_manager);
+
+    $this->assertSame(['en'], array_keys($resolver->resolve($entity)));
   }
 
   /**
-   * A genuine content translation is exposed alongside the source language.
+   * Existing translations are exposed alongside the source language.
    */
   public function testExistingTranslationIsAvailable(): void {
-    $language_storage = $this->container
-      ->get('entity_type.manager')
-      ->getStorage('configurable_language');
-    $language_storage->create(['id' => 'cy'])->save();
+    $english = $this->createLanguage('en');
+    $welsh = $this->createLanguage('cy');
 
-    $node = Node::create([
-      'type' => 'page',
-      'title' => 'Council tax support',
-      'langcode' => 'en',
+    $language_manager = $this->createMock(LanguageManagerInterface::class);
+    $language_manager->method('getLanguages')->willReturn([
+      'en' => $english,
+      'cy' => $welsh,
     ]);
-    $node->addTranslation('cy', [
-      'title' => 'Cymorth treth gyngor',
-    ]);
-    $node->save();
 
-    $languages = $this->container
-      ->get('localgov_multilingual.available_translations_resolver')
-      ->resolve($node);
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $entity->method('language')->willReturn($english);
+    $entity->method('hasTranslation')->with('cy')->willReturn(TRUE);
 
-    $this->assertSame(['en', 'cy'], array_keys($languages));
+    $resolver = new AvailableTranslationsResolver($language_manager);
+
+    $this->assertSame(['en', 'cy'], array_keys($resolver->resolve($entity)));
+  }
+
+  /**
+   * Creates a mocked language object.
+   */
+  private function createLanguage(string $langcode): LanguageInterface {
+    $language = $this->createMock(LanguageInterface::class);
+    $language->method('getId')->willReturn($langcode);
+    return $language;
   }
 
 }
