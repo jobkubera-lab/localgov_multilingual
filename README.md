@@ -1,3 +1,7 @@
+> **KUBERA REFERENCE / UPSTREAM STUDY REPOSITORY**
+>
+> This repository is retained by `jobkubera-lab` for reference and engineering study. It is not presented as original KUBERA code. Original upstream authorship and licensing remain authoritative. Upstream: [localgovdrupal/localgov_multilingual](https://github.com/localgovdrupal/localgov_multilingual).
+
 # LocalGov Drupal Multilingual
 
 Adds multilingual functionality to LocalGov Drupal sites. 
